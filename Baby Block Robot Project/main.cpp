@@ -45,10 +45,14 @@ int main(void){
     
     printBlockLayout(blocks);
     
-    for(int j = 1; j <= 20; j++){
+    for(int j = 0; j < 19; j++){
         cout << "Please enter a character for the next block" << endl;
+        
         if(j < 10)
             increment_coefficient = 2;
+        else
+            increment_coefficient = 1;
+        
         current_block = get_block();
         blocks = sort(blocks, search(current_block, blocks, increment_coefficient, increment, switch_count), current_block, increment, switch_count);
         
