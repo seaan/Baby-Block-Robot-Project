@@ -47,8 +47,9 @@ int main(void){
     
     for(int j = 1; j <= 20; j++){
         cout << "Please enter a character for the next block" << endl;
-        if(j > 10)
+        if(j < 10)
             increment_coefficient = 2;
+        current_block = get_block();
         blocks = sort(blocks, search(current_block, blocks, increment_coefficient, increment, switch_count), current_block, increment, switch_count);
         
         printBlockLayout(blocks);
@@ -97,13 +98,17 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
     index = findMid(blocks);
     if(current_block > blocks[index])
         increment = 1*increment_coefficient;
-    else if(current_block < blocks[index])
+    else if(current_block < blocks[index]){
+        //cout << current_block << "<" << blocks[index] << endl; //TEST
         increment = -1*increment_coefficient;
+    }
     else
         return index;
-    
-    do
+    //cout << "current increment after first set is: " << increment << endl; //TEST
+    do{
         index += increment;
+        cout << "incremented to index" << index << endl;
+    }
     while(!(index >= 19 || index <= 0 
             || test_empty(index,blocks) 
             || (current_block > blocks[index] && increment < 0)
@@ -112,46 +117,70 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
 
     if(test_empty(index,blocks))
         return index;
-    else if(index > 19){ //If we're to the right of the max index
-        current_block = switch_blocks(current_block, 19, blocks, switch_count); //We'll need switch the current block with the last block in the array, at index 19.
-        return index -= increment; //Then we can take a step backwards so that we 
-    }
-    else if(index < 0){ //Then if we're to the left of the min index
-        current_block = switch_blocks(current_block, 0, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
-        return index -= increment;
-    }
-    else{ //if it's out of our index
+    if(index <= 19 && index >= 0){ //if we're not outside of the array..
         current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll switch the blocks.
-        return index += increment; //then we need to send our new current block into the sorting function with the net index
+        return index += increment; //then we need to send our new current block into the sorting function with the next index
+    }\
+
+    else{ //But if we ARE outside of the array
+        if (index > 19) { //then if we're to the right of the max index
+            index = 19;
+            if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
+                put_block(current_block, index, blocks);
+            else{
+                current_block = switch_blocks(current_block, index, blocks, switch_count); //If not, we'll need switch the current block with the last block in the array, at index 19.
+                return index - increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
+            }
+        }
+        else{ //If we're to the left of the min index
+            index = 0;
+            if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
+                put_block(current_block, index, blocks);
+            else{
+                current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
+                return index - increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
+            }
+        }
     }
         
 }
 
 char *sort(char *blocks, unsigned int index, char current_block, int increment, unsigned int switch_count){
-    if(index < 19 && index > 0){ //if we're not outside of the array..
+    if(index <= 19 && index >= 0){ //if we're not outside of the array..
         if(test_empty(index, blocks) == true) //see if the slot is empty
             put_block(current_block, index, blocks); //if it is, put the block there and be done.
         
-        else //if it's not empty
-		do {
-                    switch_blocks()
-                    shift_right;
-                    switch_blocks;
-                    count++;
-		}while (blocks[index] !> 19 && !(test_empty == true));
-		put_block(current_block, index, blocks);
+        else{ //if it's not empty
+            current_block = switch_blocks(current_block, index, blocks, switch_count); //we'll switch the blocks
+            index += increment; //Then we can step to the next index.
+            blocks = sort(blocks, index, current_block, increment, switch_count); //And use recursion to sort our new current_block!
+        }
     }
-    index += increment;
-
-    if (index > 19 && index < 0)
-	{
-		do {
-		shift_left;
-		switch_blocks;
-		count++;
-		}while(!(test_empty == true));
-		put_block(current_block, [index], blocks);
-	}
+    else{ //but if we ARE outside of the array..
+        if(index > 19) { //If we're to the right of the max index
+            index = 19;
+            if(test_empty(index,blocks)) //See if it's empty and if we can just put the block down
+                put_block(current_block, index, blocks);
+            else{ //If it's not empty
+                current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the last block in the array, at index 19. 
+                increment *= -1; //If we reach the end of the array, we need to switch the way that we're stepping.
+                index += increment; //So now we will be stepping backwards to sort.
+                blocks = sort(blocks, index, current_block, increment, switch_count);
+            }
+        }
+        
+        if (index < 0) { //Then if we're to the left of the min index
+            index = 0;
+            if(test_empty(index,blocks)) //See if it's empty and if we can just put the block down
+                put_block(current_block, index, blocks);
+            else{ //if it's not empty..
+                current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
+                increment *= -1; //If we reach the end of the array, we need to switch the way that we're stepping.
+                index += increment; //Now we can step forwards to sort.
+                blocks = sort(blocks, index, current_block, increment, switch_count);
+            }
+        }
+    }
     return blocks;
 }
 
@@ -196,46 +225,6 @@ unsigned int put_block(char block, unsigned int position, char *blocks)
 {
 	blocks[position] = block;
 	cout << "Block " << block << " inserted into slot " << position << endl;
-	return position;
-}
-
-// Function shift_right
-// This function increments the index simulating a movement of the robot 
-// to the next higher slot (index) of the array
-// 
-// Inputs:
-// position - type unsigned int - current slot position
-//
-// Returns:
-// position - type unsigned int - The updated position which is input position + 1
-//
-// Example function call:  position = shift_right(position)
-//
-
-unsigned int shift_right(unsigned int position)
-{
-	position++;
-	cout << "Position right shifted to " << position << endl;
-	return position;
-}
-
-// Function shift_left
-// This function decrements the index simulating a movement of the robot 
-// to the next lower slot (index) of the array
-// 
-// Inputs:
-// position - type unsigned int - current slot position
-//
-// Returns:
-// position - type unsigned int - The updated position which is input position - 1
-//
-// Example function call: position = shift_left(position)
-//
-
-unsigned int shift_left(unsigned int position)
-{
-	position--;
-	cout << "Position left shifted to " << position << endl;
 	return position;
 }
 
@@ -293,6 +282,7 @@ char switch_blocks(char robot, unsigned int position, char *blocks, unsigned int
 	robot = blocks[position];
 	blocks[position] = temp_hold;
         switch_count++;
+        cout << "Current switch count: " << switch_count << endl;
 	return robot;
 }
 // Function test_empty
