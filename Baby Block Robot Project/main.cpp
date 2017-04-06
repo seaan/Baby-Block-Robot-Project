@@ -18,15 +18,22 @@ unsigned int put_block(char block, unsigned int position, char array[]);
 unsigned int shift_right(unsigned int position);
 unsigned int shift_left(unsigned int position);
 bool compare_blocks(char robot, char in_slot);
-char switch_blocks(char robot, unsigned int position, char array[]);
+char switch_blocks(char robot, unsigned int position, char array[], unsigned int & switch_count);
 bool test_empty(unsigned int position, char array[]);
-unsigned int compSeq(char current_block, char blocks[20], unsigned int N);
-unsigned int findMid(char blocks[20]);
-void printBlockLayout(char blocks[20]);
+unsigned int findMid(char *blocks);
+void printBlockLayout(char *blocks);
+char *sort(char *blocks, unsigned int index, char current_block, int increment, unsigned int switch_count);
+unsigned int search(char &current_block, char *blocks, unsigned int increment_coefficient, int &increment, unsigned int switch_count);
 
 int main(void){
-    char blocks[20] = {0}, current_block, index;
-    unsigned int start_pos = 0, N = 1;
+    char *blocks, current_block;
+    unsigned int start_pos = 0, increment_coefficient = 1, switch_count = 0;
+    int increment = 1;
+    
+    blocks = new char[20];
+    for(int i = 0; i < 20; i++)
+        blocks[i] = 0; //Initialize all of the elements in our block array to zero.
+    cout << "Blocks = " << blocks << endl;
     
     cout << "Hello, I am the Baby Block 270 Robot. Please specify the starting slot (0-19):" << endl;
     cin >> start_pos;
@@ -41,8 +48,8 @@ int main(void){
     for(int j = 1; j <= 20; j++){
         cout << "Please enter a character for the next block" << endl;
         if(j > 10)
-            N = 2;
-        index = compSeq(get_block(), blocks, N);
+            increment_coefficient = 2;
+        blocks = sort(blocks, search(current_block, blocks, increment_coefficient, increment, switch_count), current_block, increment, switch_count);
         
         printBlockLayout(blocks);
     }
@@ -51,7 +58,7 @@ int main(void){
     return 0;
 }
 
-void printBlockLayout(char blocks[20]){
+void printBlockLayout(char *blocks){
     cout << endl << "Current block layout: " << endl;
         for (int i = 0; i < 20; i++) {
             if (blocks[i] != 0)
@@ -61,7 +68,7 @@ void printBlockLayout(char blocks[20]){
         }
     cout << endl;
 }
-unsigned int findMid(char blocks[20]){ //Function used to find the index of the current middle baby block.
+unsigned int findMid(char *blocks){ //Function used to find the index of the current middle baby block.
     unsigned int N = 0, mid = 0, index = 0;
     
     for(int i = 0; i < 20; i++){
@@ -84,15 +91,14 @@ unsigned int findMid(char blocks[20]){ //Function used to find the index of the 
     }
 }
 
-unsigned int compSeq(char current_block, char blocks[20], unsigned int N){
+unsigned int search(char &current_block, char *blocks, unsigned int increment_coefficient, int &increment, unsigned int switch_count){
     unsigned int index = 0;
-    int increment = 1;
     
     index = findMid(blocks);
     if(current_block > blocks[index])
-        increment = 1*N;
+        increment = 1*increment_coefficient;
     else if(current_block < blocks[index])
-        increment = -1*N;
+        increment = -1*increment_coefficient;
     else
         return index;
     
@@ -104,10 +110,49 @@ unsigned int compSeq(char current_block, char blocks[20], unsigned int N){
             || (current_block < blocks[index] && increment > 0)
             || (current_block == blocks[index])));
 
-    if(index > 19 || index < 0)
-        return index-1;
-    else
+    if(test_empty(index,blocks))
         return index;
+    else if(index > 19){ //If we're to the right of the max index
+        current_block = switch_blocks(current_block, 19, blocks, switch_count); //We'll need switch the current block with the last block in the array, at index 19.
+        return index -= increment; //Then we can take a step backwards so that we 
+    }
+    else if(index < 0){ //Then if we're to the left of the min index
+        current_block = switch_blocks(current_block, 0, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
+        return index -= increment;
+    }
+    else{ //if it's out of our index
+        current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll switch the blocks.
+        return index += increment; //then we need to send our new current block into the sorting function with the net index
+    }
+        
+}
+
+char *sort(char *blocks, unsigned int index, char current_block, int increment, unsigned int switch_count){
+    if(index < 19 && index > 0){ //if we're not outside of the array..
+        if(test_empty(index, blocks) == true) //see if the slot is empty
+            put_block(current_block, index, blocks); //if it is, put the block there and be done.
+        
+        else //if it's not empty
+		do {
+                    switch_blocks()
+                    shift_right;
+                    switch_blocks;
+                    count++;
+		}while (blocks[index] !> 19 && !(test_empty == true));
+		put_block(current_block, index, blocks);
+    }
+    index += increment;
+
+    if (index > 19 && index < 0)
+	{
+		do {
+		shift_left;
+		switch_blocks;
+		count++;
+		}while(!(test_empty == true));
+		put_block(current_block, [index], blocks);
+	}
+    return blocks;
 }
 
 // ------------------------------------------------------------------------ //
@@ -147,9 +192,9 @@ char get_block(void)
 //
 // Example function call: 	put_block(block, position, slots);
 
-unsigned int put_block(char block, unsigned int position, char array[])
+unsigned int put_block(char block, unsigned int position, char *blocks)
 {
-	array[position] = block;
+	blocks[position] = block;
 	cout << "Block " << block << " inserted into slot " << position << endl;
 	return position;
 }
@@ -239,14 +284,15 @@ bool compare_blocks(char robot, char in_slot)
 // Example function call: block = switch_blocks(block,  position, array);
 //
 
-char switch_blocks(char robot, unsigned int position, char array[])
+char switch_blocks(char robot, unsigned int position, char *blocks, unsigned int &switch_count)
 {
 	char temp_hold;
 
-	cout << "Switching blocks " << robot << " with " << array[position] << endl;
+	cout << "Switching blocks " << robot << " with " << blocks[position] << endl;
 	temp_hold = robot;
-	robot = array[position];
-	array[position] = temp_hold;
+	robot = blocks[position];
+	blocks[position] = temp_hold;
+        switch_count++;
 	return robot;
 }
 // Function test_empty
