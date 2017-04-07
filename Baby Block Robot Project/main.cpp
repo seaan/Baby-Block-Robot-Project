@@ -18,12 +18,12 @@ unsigned int put_block(char block, unsigned int position, char array[]);
 unsigned int shift_right(unsigned int position);
 unsigned int shift_left(unsigned int position);
 bool compare_blocks(char robot, char in_slot);
-char switch_blocks(char robot, unsigned int position, char array[], unsigned int & switch_count);
+char switch_blocks(char robot, unsigned int position, char array[], unsigned int &switch_count);
 bool test_empty(unsigned int position, char array[]);
 unsigned int findMid(char *blocks);
 void printBlockLayout(char *blocks);
-char *sort(char *blocks, unsigned int index, char current_block, int increment, unsigned int switch_count);
-unsigned int search(char &current_block, char *blocks, unsigned int increment_coefficient, int &increment, unsigned int switch_count);
+char *sort(char *blocks, unsigned int index, char &current_block, int &increment, unsigned int &switch_count, unsigned int sort_iteration);
+unsigned int search(char &current_block, char *blocks, unsigned int increment_coefficient, int &increment, unsigned int &switch_count);
 
 int main(void){
     char *blocks, current_block;
@@ -48,13 +48,13 @@ int main(void){
     for(int j = 0; j < 19; j++){
         cout << "Please enter a character for the next block" << endl;
         
-        if(j < 10)
+        if(j < 9)
             increment_coefficient = 2;
         else
             increment_coefficient = 1;
         
         current_block = get_block();
-        blocks = sort(blocks, search(current_block, blocks, increment_coefficient, increment, switch_count), current_block, increment, switch_count);
+        blocks = sort(blocks, search(current_block, blocks, increment_coefficient, increment, switch_count), current_block, increment, switch_count, 0);
         
         printBlockLayout(blocks);
     }
@@ -96,7 +96,7 @@ unsigned int findMid(char *blocks){ //Function used to find the index of the cur
     }
 }
 
-unsigned int search(char &current_block, char *blocks, unsigned int increment_coefficient, int &increment, unsigned int switch_count){
+unsigned int search(char &current_block, char *blocks, unsigned int increment_coefficient, int &increment, unsigned int &switch_count){
     unsigned int index = 0;
     
     index = findMid(blocks);
@@ -121,19 +121,20 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
 
     if(test_empty(index,blocks))
         return index;
-    if(index <= 19 && index >= 0){ //if we're not outside of the array..
+    if(index < 19 && index > 0){ //if we're not outside of the array..
         current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll switch the blocks.
         return index += increment; //then we need to send our new current block into the sorting function with the next index
     }\
 
     else{ //But if we ARE outside of the array
-        if (index > 19) { //then if we're to the right of the max index
+        if (index >= 19) { //then if we're to the right of the max index
             index = 19;
             if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
                 put_block(current_block, index, blocks);
             else{
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //If not, we'll need switch the current block with the last block in the array, at index 19.
-                return index - increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
+                increment *= -1;
+                return index + increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
             }
         }
         else{ //If we're to the left of the min index
@@ -142,34 +143,38 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
                 put_block(current_block, index, blocks);
             else{
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
-                return index - increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
+                increment *= -1;
+                return index + increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
             }
         }
     }
         
 }
 
-char *sort(char *blocks, unsigned int index, char current_block, int increment, unsigned int switch_count){
-    if(index <= 19 && index >= 0){ //if we're not outside of the array..
+char *sort(char *blocks, unsigned int index, char &current_block, int &increment, unsigned int &switch_count, unsigned int eoa_count){
+    cout << "index: " << index << endl;
+    if(index < 19 && index > 0){ //if we're not outside of the array..
         if(test_empty(index, blocks) == true) //see if the slot is empty
             put_block(current_block, index, blocks); //if it is, put the block there and be done.
         
         else{ //if it's not empty
             current_block = switch_blocks(current_block, index, blocks, switch_count); //we'll switch the blocks
             index += increment; //Then we can step to the next index.
-            blocks = sort(blocks, index, current_block, increment, switch_count); //And use recursion to sort our new current_block!
+            blocks = sort(blocks, index, current_block, increment, switch_count, eoa_count); //And use recursion to sort our new current_block!
         }
     }
     else{ //but if we ARE outside of the array..
-        if(index > 19) { //If we're to the right of the max index
+        if(index >= 19) { //If we're to the right of the max index
             index = 19;
             if(test_empty(index,blocks)) //See if it's empty and if we can just put the block down
                 put_block(current_block, index, blocks);
             else{ //If it's not empty
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the last block in the array, at index 19. 
-                increment *= -1; //If we reach the end of the array, we need to switch the way that we're stepping.
+                if(eoa_count == 0) ///If we reach the end of the array in our first iteration, we need to switch the way that we're stepping.
+                    increment *= -1; //But if it's not in the first iteration, we don't want to keep switching the way that we're going.
                 index += increment; //So now we will be stepping backwards to sort.
-                blocks = sort(blocks, index, current_block, increment, switch_count);
+                eoa_count++; //Increment the end of array count.
+                blocks = sort(blocks, index, current_block, increment, switch_count, eoa_count); //And we can use recursion to sort the rest.
             }
         }
         
@@ -179,9 +184,11 @@ char *sort(char *blocks, unsigned int index, char current_block, int increment, 
                 put_block(current_block, index, blocks);
             else{ //if it's not empty..
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
-                increment *= -1; //If we reach the end of the array, we need to switch the way that we're stepping.
-                index += increment; //Now we can step forwards to sort.
-                blocks = sort(blocks, index, current_block, increment, switch_count);
+                if(eoa_count == 0) ///If we reach the end of the array in our first iteration, we need to switch the way that we're stepping.
+                    increment *= -1; //But if it's not in the first iteration, we don't want to keep switching the way that we're going.
+                index += increment; //So now we will be stepping backwards to sort.
+                eoa_count++;
+                blocks = sort(blocks, index, current_block, increment, switch_count, eoa_count); //And we can use recursion to sort the rest.
             }
         }
     }
@@ -304,7 +311,7 @@ char switch_blocks(char robot, unsigned int position, char *blocks, unsigned int
 //
 bool test_empty(unsigned int position, char array[])
 {
-	if  (array[position] == NULL)
+	if  (array[position] == 0)
 	{
 		cout << "Slot " << position << " empty. " << endl;
 		return true;
