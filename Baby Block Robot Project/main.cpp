@@ -153,7 +153,7 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
 char *sort(char *blocks, unsigned int index, char &current_block, int &increment, unsigned int &switch_count, unsigned int eoa_count){
     cout << "index: " << index << endl;
     if(index < 19 && index > 0){ //if we're not outside of the array..
-        if(test_empty(index, blocks) == true) //see if the slot is empty
+        if(test_empty(index, blocks)) //see if the slot is empty
             put_block(current_block, index, blocks); //if it is, put the block there and be done.
         
         else{ //if it's not empty
@@ -177,7 +177,7 @@ char *sort(char *blocks, unsigned int index, char &current_block, int &increment
             }
         }
         
-        if (index < 0) { //Then if we're to the left of the min index
+        if (index <= 0) { //Then if we're to the left of the min index
             index = 0;
             if(test_empty(index,blocks)) //See if it's empty and if we can just put the block down
                 put_block(current_block, index, blocks);
