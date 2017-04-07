@@ -114,9 +114,8 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
         cout << "incremented to index" << index << endl;
     }
     while(!(index >= 19 || index <= 0 
-            || test_empty(index,blocks) 
-            || (current_block > blocks[index] && increment < 0)
-            || (current_block < blocks[index] && increment > 0)
+            || (current_block > blocks[index] && current_block > blocks[index+2] && increment < 0)
+            || (current_block < blocks[index] && current_block < blocks[index+2] && increment > 0)
             || (current_block == blocks[index])));
 
     if(test_empty(index,blocks))
