@@ -117,10 +117,13 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
             || (current_block > blocks[index] && current_block > blocks[index+2] && increment < 0)
             || (current_block < blocks[index] && current_block < blocks[index+2] && increment > 0)
             || (current_block == blocks[index])));
+    
+        index -= increment; //If we've 
+        
 
-    if(test_empty(index,blocks))
-        return index;
     if(index < 19 && index > 0){ //if we're not outside of the array..
+        if(test_empty(index,blocks))
+            return index;
         current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll switch the blocks.
         return index += increment; //then we need to send our new current block into the sorting function with the next index
     }\
@@ -129,7 +132,7 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
         if (index >= 19) { //then if we're to the right of the max index
             index = 19;
             if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
-                put_block(current_block, index, blocks);
+                return index;
             else{
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //If not, we'll need switch the current block with the last block in the array, at index 19.
                 increment *= -1;
@@ -139,7 +142,7 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
         else{ //If we're to the left of the min index
             index = 0;
             if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
-                put_block(current_block, index, blocks);
+                return index;
             else{
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
                 increment *= -1;
