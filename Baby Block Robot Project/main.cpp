@@ -118,6 +118,7 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
             || (current_block < blocks[index] && current_block < blocks[index+2] && increment > 0)
             || (current_block == blocks[index])));
     
+    if((current_block > blocks[index]&& increment < 0 || current_block < blocks[index] && increment > 0) && (index == 19 || index == 0))
         index -= increment; //If we've 
         
 
