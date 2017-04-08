@@ -85,7 +85,7 @@ unsigned int findMid(char *blocks){ //Function used to find the index of the cur
         mid = N/2;
     else
         mid = (N/2)+1;
-    //cout << "mid = " << mid << endl;
+    cout << "mid = " << mid << endl;
     
     for(int i = 0; i < 20; i++){
         if(blocks[i] != 0)
@@ -113,20 +113,31 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
         index += increment;
         cout << "incremented to index" << index << endl;
     }
-    while(!(index >= 19 || index <= 0 
-            || (current_block > blocks[index] && current_block > blocks[index+2] && increment < 0)
-            || (current_block < blocks[index] && current_block < blocks[index+2] && increment > 0)
-            || (current_block == blocks[index])));
+    while(!(index >= 19 || index <= 0
+            || (current_block > blocks[index] && current_block > blocks[index+increment] && increment < 0)
+            || (current_block < blocks[index] && current_block < blocks[index+increment] && increment > 0)
+            || (current_block == blocks[index]))
+            || (test_empty(index,blocks) && test_empty(index+increment,blocks)));
     
-    if((current_block > blocks[index]&& increment < 0 || current_block < blocks[index] && increment > 0) && (index == 19 || index == 0))
-        index -= increment; //If we've 
-        
+    if((current_block > blocks[index]&& increment < 0 || current_block < blocks[index] && increment > 0) && (index == 19 || index == 0)) 
+        index -= increment; //If we've hit the end of the index and our current block doesn't fit there, we'll need to step back towards the center.
 
     if(index < 19 && index > 0){ //if we're not outside of the array..
         if(test_empty(index,blocks))
             return index;
+        
+        if(current_block < blocks[index] && increment > 0)
+            increment *= -1; //We'll need to go backwards to sort from here on.
+        //if((current_block > blocks[index] && increment < 0))
+            
+        if((current_block > blocks[index] && increment > 0 || current_block < blocks[index] && increment < 0)){
+                index += increment;
+                if(test_empty(index,blocks))
+                    return index;
+        }
+        
         current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll switch the blocks.
-        return index += increment; //then we need to send our new current block into the sorting function with the next index
+        return index + increment; //then we need to send our new current block into the sorting function with the next index
     }\
 
     else{ //But if we ARE outside of the array
