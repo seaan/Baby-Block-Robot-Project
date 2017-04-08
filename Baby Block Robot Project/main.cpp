@@ -115,12 +115,11 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
     }
     while(!(index >= 19 || index <= 0
             || (current_block > blocks[index] && current_block > blocks[index+increment] && increment < 0)
-            || (current_block < blocks[index] && current_block < blocks[index+increment] && increment > 0)
+            || (current_block < blocks[index] && (current_block < blocks[index+increment] || blocks[index+increment] == 0) && increment > 0)
             || (current_block == blocks[index]))
             || (test_empty(index,blocks) && test_empty(index+increment,blocks)));
     
-    if((current_block > blocks[index]&& increment < 0 || current_block < blocks[index] && increment > 0) && (index == 19 || index == 0)) 
-        index -= increment; //If we've hit the end of the index and our current block doesn't fit there, we'll need to step back towards the center.
+    
 
     if(index < 19 && index > 0){ //if we're not outside of the array..
         if(test_empty(index,blocks))
@@ -146,6 +145,9 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
             if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
                 return index;
             else{
+                if (current_block < blocks[index] && increment > 0){
+                    index -= increment; //If we've hit the end of the index and our current block doesn't fit there, we'll need to step back towards the center.
+                }
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //If not, we'll need switch the current block with the last block in the array, at index 19.
                 increment *= -1;
                 return index + increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
@@ -156,6 +158,9 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
             if(test_empty(index,blocks)) //We now need to see if it's empty. If it is, we will just put the block down
                 return index;
             else{
+                if (current_block > blocks[index] && increment < 0) {
+                    index -= increment; //If we've hit the end of the index and our current block doesn't fit there, we'll need to step back towards the center.
+                }
                 current_block = switch_blocks(current_block, index, blocks, switch_count); //We'll need switch the current block with the first block in the array, index 0.
                 increment *= -1;
                 return index + increment; //Then we can take a step forwards or backwards from the first or last index before we send it to the sorting function.
