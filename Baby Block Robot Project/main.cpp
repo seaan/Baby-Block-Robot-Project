@@ -33,7 +33,6 @@ int main(void){
     blocks = new char[20];
     for(int i = 0; i < 20; i++)
         blocks[i] = 0; //Initialize all of the elements in our block array to zero.
-    cout << "Blocks = " << blocks << endl;
     
     cout << "Hello, I am the Baby Block 270 Robot. Please specify the starting slot (0-19):" << endl;
     cin >> start_pos;
@@ -59,7 +58,7 @@ int main(void){
         printBlockLayout(blocks);
     }
     
-    
+    cout << "Total switch count: " << switch_count << endl;
     return 0;
 }
 
@@ -80,12 +79,10 @@ unsigned int findMid(char *blocks){ //Function used to find the index of the cur
         if(blocks[i] != 0)
             N++;
     }
-    //cout << "N = " << N << endl; 
     if(N % 2 == 0)
         mid = N/2;
     else
         mid = (N/2)+1;
-    cout << "mid = " << mid << endl;
     
     for(int i = 0; i < 20; i++){
         if(blocks[i] != 0)
@@ -103,23 +100,18 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
     if(current_block > blocks[index])
         increment = 1*increment_coefficient;
     else if(current_block < blocks[index]){
-        //cout << current_block << "<" << blocks[index] << endl; //TEST
         increment = -1*increment_coefficient;
     }
     else
         return index;
-    //cout << "current increment after first set is: " << increment << endl; //TEST
     do{
         index += increment;
-        cout << "incremented to index" << index << endl;
     }
     while(!(index >= 19 || index <= 0
             || (current_block > blocks[index] && current_block > blocks[index+increment] && increment < 0)
             || (current_block < blocks[index] && (current_block < blocks[index+increment] || blocks[index+increment] == 0) && increment > 0)
             || (current_block == blocks[index]))
-            || (test_empty(index,blocks) && test_empty(index+increment,blocks)));
-    
-    
+            || !(test_empty(index,blocks)));
 
     if(index < 19 && index > 0){ //if we're not outside of the array..
         if(test_empty(index,blocks))
@@ -171,7 +163,6 @@ unsigned int search(char &current_block, char *blocks, unsigned int increment_co
 }
 
 char *sort(char *blocks, unsigned int index, char &current_block, int &increment, unsigned int &switch_count, unsigned int eoa_count){
-    cout << "index: " << index << endl;
     if(index < 19 && index > 0){ //if we're not outside of the array..
         if(test_empty(index, blocks)) //see if the slot is empty
             put_block(current_block, index, blocks); //if it is, put the block there and be done.
@@ -312,7 +303,6 @@ char switch_blocks(char robot, unsigned int position, char *blocks, unsigned int
 	robot = blocks[position];
 	blocks[position] = temp_hold;
         switch_count++;
-        cout << "Current switch count: " << switch_count << endl;
 	return robot;
 }
 // Function test_empty
